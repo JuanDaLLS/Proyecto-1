@@ -198,6 +198,16 @@ class SistemaRegistro:
         else:
             print("Sin cursos asignados.")
 
+    def reporte_promedios_bajos(self):
+        print("\n--- REPORTE: ESTUDIANTES CON PROMEDIO BAJO (<60) ---")
+        for u in self.usuarios:
+            if u.get_tipo() == "estudiante":
+                for curso, notas in u.calificaciones.items():
+                    if len(notas) > 0:
+                        promedio = sum(notas) / len(notas)
+                        if promedio < 60:
+                            print(f"{u.get_nombre()} - {curso}: {promedio:.2f}")
+
     def menu_principal(self):
         while True:
             print("="*50)
@@ -209,9 +219,10 @@ class SistemaRegistro:
             print("4. Crear evaluación")
             print("5. Registrar calificación")
             print("6. Ver cursos por usuario")
-            print("7. Salir")
+            print("7. ver promedios bajos")
+            print("8. Salir")
             print("="*50)
-            opcion = input("Seleccione una opción (1-7): ").strip()
+            opcion = input("Seleccione una opción (1-8): ").strip()
             if opcion == "1":
                 self.registrar_nuevo_usuario()
             elif opcion == "2":
@@ -224,11 +235,15 @@ class SistemaRegistro:
                 self.registrar_calificacion()
             elif opcion == "6":
                 self.ver_cursos_usuario()
-            elif opcion == "7":
-                print("bai")
+            elif opcion == "7":  
+                self.reporte_promedios_bajos() 
+            elif opcion == "8":
+                print("Finalizado")
                 break
             else:
                 print("Opción no válida. Intente de nuevo.")
+
+
 
 
 sistema = SistemaRegistro()
