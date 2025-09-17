@@ -38,8 +38,8 @@ Filtra los cursos según el usuario activo. Simula una vista personalizada del e
 ## Autor
 
 - Luis Gerardo yo
-- Otro x1
-- El otro x2
+- Fernando Mendez
+- Juan Ulin
 Universidad Rafael Landívar  
 Proyecto académico
 
