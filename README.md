@@ -35,17 +35,6 @@ Filtra los cursos según el usuario activo. Simula una vista personalizada del e
 - Exportar datos a archivo `.txt` o `.csv`
 - Separar funciones en módulos (`usuarios.py`, `cursos.py`, `evaluaciones.py`)
 
-## Requisitos
-
-Este sistema requiere Python 3.7 o superior y la librería `colorama` para mostrar el menú con colores en consola.
-
-### Instalación de dependencias
-
-Ejecutar en terminal:
-
-```bash
-pip install colorama
-
 ## Autor
 
 - Luis Gerardo yo
@@ -53,3 +42,14 @@ pip install colorama
 - El otro x2
 Universidad Rafael Landívar  
 Proyecto académico
+
+## Requisitos
+
+Este sistema requiere de la librería `colorama` para mostrar el menú con colores en consola.
+
+### Instalación de dependencias
+
+Ejecutar en terminal:
+
+```bash
+pip install colorama
