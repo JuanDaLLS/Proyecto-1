@@ -1,0 +1,437 @@
+class Registro:
+    """
+    Representa a un usuario del sistema (profesor o estudiante).
+
+    Atributos privados:
+        __nombre (str): Nombre del usuario.
+        __edad (int): Edad del usuario.
+        __carne (str): Identificador único del usuario.
+        __correo (str): Correo electrónico del usuario.
+        __tipo (str): Rol del usuario en el sistema: "profesor" o "estudiante".
+
+    Atributos públicos:
+        cursos (list[str]): Para estudiantes: cursos inscritos. Para profesores: cursos asignados.
+        calificaciones (dict[str, list[float]]): Notas del estudiante por curso.
+    """
+
+    def __init__(self, **kwargs):
+        """
+        Inicializa un usuario con datos flexibles vía **kwargs.
+
+        Parámetros esperados en kwargs:
+            nombre (str), edad (int), carne (str), correo (str), tipo (str)
+        """
+        self.__nombre = kwargs.get('nombre')
+        self.__edad = kwargs.get('edad')
+        self.__carne = kwargs.get('carne')
+        self.__correo = kwargs.get('correo')
+        self.__tipo = kwargs.get('tipo')
+        self.cursos = []              # Cursos del usuario (inscritos o asignados)
+        self.calificaciones = {}      # Notas por curso (solo aplica a estudiantes)
+
+    def mostrar_info(self):
+        """
+        Devuelve un string legible con la información principal del usuario.
+        """
+        return "Nombre: " + str(self.__nombre) + ", Edad: " + str(self.__edad) + ", Carné: " + str(self.__carne) + ", Correo: " + str(self.__correo) + ", Tipo: " + str(self.__tipo)
+
+    def get_carne(self):
+        """Retorna el carné del usuario."""
+        return self.__carne
+
+    def get_tipo(self):
+        """Retorna el tipo/rol del usuario: 'profesor' o 'estudiante'."""
+        return self.__tipo
+
+    def get_nombre(self):
+        """Retorna el nombre del usuario."""
+        return self.__nombre
+
+
+class SistemaRegistro:
+    """
+    Sistema de gestión de usuarios, cursos, evaluaciones y notas.
+
+    Atributos:
+        usuarios (list[Registro]): Usuarios registrados.
+        carnets_registrados (set[str]): Carnés utilizados para evitar duplicados.
+        cursos_disponibles (list[str]): Nombres de cursos existentes.
+        cupos_curso (dict[str, int]): Cupo máximo por curso.
+        asignacion_profesores (dict[str, str]): Mapea curso -> carné del profesor asignado.
+        evaluaciones (dict[str, list[dict]]): Banco de preguntas por curso.
+    """
+
+    def __init__(self):
+        """Inicializa las estructuras principales del sistema."""
+        self.usuarios = []
+        self.carnets_registrados = set()
+        self.cursos_disponibles = []
+        self.cupos_curso = {}
+        self.asignacion_profesores = {}
+        self.evaluaciones = {}
+
+    def _buscar_usuario_por_carne(self, carne):
+        """
+        Busca un usuario por carné.
+
+        Args:
+            carne (str): Carné a buscar.
+
+        Returns:
+            Registro | None: Usuario encontrado o None si no existe.
+        """
+        return next((u for u in self.usuarios if u.get_carne() == carne), None)
+
+    def _buscar_profesor_por_carne(self, carne):
+        """
+        Busca y valida que el carné pertenezca a un profesor.
+
+        Args:
+            carne (str): Carné a validar.
+
+        Returns:
+            Registro | None: Profesor encontrado o None.
+        """
+        u = self._buscar_usuario_por_carne(carne)
+        return u if (u and u.get_tipo() == "profesor") else None
+
+    def agregar_curso(self):
+        """
+        Crea un curso con cupo y (opcionalmente) asigna un profesor por carné.
+        Valida:
+            - Nombre no vacío
+            - Cupo entero > 0
+            - Si se especifica carné de profesor, que exista y sea profesor
+        Efectos:
+            - Agrega a cursos_disponibles y cupos_curso
+            - Si hay profesor válido, registra en asignacion_profesores y en su lista de cursos
+        """
+        print("\n--- AGREGAR CURSO ---")
+        nombre = input("Nombre del curso: ").strip()
+        if not nombre:
+            print("El nombre del curso no puede estar vacío.")
+            return
+
+        cupo_txt = input("Cupo (número entero > 0): ").strip()
+        try:
+            cupo_val = int(cupo_txt)
+            if cupo_val <= 0:
+                print("El cupo debe ser un entero mayor que 0.")
+                return
+        except ValueError:
+            print("Cupo inválido: debe ser un número entero.")
+            return
+
+        carne_prof = input("Carné del profesor asignado (o dejar vacío para ninguno): ").strip()
+        profesor = None
+        if carne_prof:
+            profesor = self._buscar_profesor_por_carne(carne_prof)
+            if not profesor:
+                print("No se encontró un profesor con ese carné. El curso se creará sin profesor asignado.")
+                carne_prof = ""
+
+        # Registro de curso
+        self.cursos_disponibles.append(nombre)
+        self.cupos_curso[nombre] = cupo_val
+
+        if profesor:
+            self.asignacion_profesores[nombre] = carne_prof
+            # Asociar el curso en la lista del profesor si no estaba ya
+            if nombre not in profesor.cursos:
+                profesor.cursos.append(nombre)
+            print(f"¡Curso '{nombre}' creado con cupo {cupo_val} y asignado a {profesor.get_nombre()} (Carné: {carne_prof})!")
+        else:
+            print(f"¡Curso '{nombre}' creado con cupo {cupo_val}! (Sin profesor asignado)")
+
+    def listar_cursos(self):
+        """
+        Muestra todos los cursos con su cupo y el profesor asignado (si lo hay).
+        """
+        print("\n--- CURSOS DISPONIBLES ---")
+        if not self.cursos_disponibles:
+            print("No hay cursos creados. Use 'Agregar curso'.")
+            return
+
+        for i, c in enumerate(self.cursos_disponibles, start=1):
+            cupo = self.cupos_curso.get(c, "N/D")
+            carne_prof = self.asignacion_profesores.get(c)
+            if carne_prof:
+                prof = self._buscar_profesor_por_carne(carne_prof)
+                nombre_prof = prof.get_nombre() if prof else "(desconocido)"
+                print(f"{i}. {c} (Cupo: {cupo}) — Profesor: {nombre_prof} [{carne_prof}]")
+            else:
+                print(f"{i}. {c} (Cupo: {cupo}) — Profesor: (no asignado)")
+
+    def registrar_nuevo_usuario(self):
+        """
+        Crea un nuevo usuario (profesor/estudiante) validando:
+            - Carné único y no vacío
+            - Nombre no vacío
+            - Edad > 0
+            - Correo con '@'
+            - Tipo válido ('profesor' o 'estudiante')
+        """
+        print("\n--- REGISTRAR NUEVO USUARIO ---")
+        while True:
+            nuevoCarne = input("Ingrese el carné: ").strip()
+            if nuevoCarne in self.carnets_registrados:
+                print("Carnet " + nuevoCarne + " ya existe. Intente con otro.")
+            elif nuevoCarne == "":
+                print("El carné no puede estar vacío.")
+            else:
+                break
+
+        nuevoNombre = input("Ingrese el nombre: ").strip()
+        if nuevoNombre == "":
+            print("El nombre no puede estar vacío.")
+            return
+
+        while True:
+            try:
+                nuevoEdad = int(input("Ingrese la edad: ").strip())
+                if nuevoEdad <= 0:
+                    print("La edad debe ser mayor a 0.")
+                    continue
+                break
+            except:
+                print("Edad inválida. Intente de nuevo.")
+
+        while True:
+            nuevoCorreo = input("Ingrese el correo: ").strip()
+            if "@" not in nuevoCorreo:
+                print("El correo debe contener '@'. Intente de nuevo.")
+            else:
+                break
+
+        while True:
+            nuevoTipo = input("Ingrese el tipo de Miembro (profesor/estudiante): ").strip().lower()
+            if nuevoTipo == "profesor" or nuevoTipo == "estudiante":
+                break
+            else:
+                print("Tipo no válido. Debe ser 'profesor' o 'estudiante'.")
+
+        nuevo_usuario = Registro(
+            nombre=nuevoNombre,
+            edad=nuevoEdad,
+            carne=nuevoCarne,
+            correo=nuevoCorreo,
+            tipo=nuevoTipo
+        )
+        self.usuarios.append(nuevo_usuario)
+        self.carnets_registrados.add(nuevoCarne)
+        print("Usuario " + nuevoNombre + " registrado exitosamente!")
+
+    def mostrar_todos_usuarios(self):
+        """
+        Lista todos los usuarios registrados con su información básica.
+        """
+        print("\n--- LISTA DE USUARIOS REGISTRADOS ---")
+        if len(self.usuarios) == 0:
+            print("No hay usuarios registrados.")
+            return
+        for i, usuario in enumerate(self.usuarios, start=1):
+            print(str(i) + ". " + usuario.mostrar_info())
+        print("Total: " + str(len(self.usuarios)) + " usuarios")
+
+    def inscribir_curso(self):
+        """
+        Inscribe a un estudiante (por carné) en un curso existente.
+        Requisitos:
+            - Debe existir el estudiante y ser de tipo 'estudiante'
+            - Debe existir al menos un curso disponible
+            - Evita inscribir dos veces al mismo curso
+        """
+        carne = input("Ingrese el carné del estudiante: ").strip()
+        estudiante = None
+        for u in self.usuarios:
+            if u.get_carne() == carne and u.get_tipo() == "estudiante":
+                estudiante = u
+                break
+        if estudiante == None:
+            print("No se encontró el estudiante con ese carné.")
+            return
+
+        if not self.cursos_disponibles:
+            print("No hay cursos disponibles. Primero agregue cursos.")
+            return
+
+        print("\n--- CURSOS DISPONIBLES ---")
+        for i, curso in enumerate(self.cursos_disponibles, start=1):
+            print(f"{i}. {curso} (Cupo: {self.cupos_curso.get(curso, 'N/D')})")
+
+        opcion = input(f"Seleccione un curso (1-{len(self.cursos_disponibles)}): ").strip()
+        try:
+            opcion_num = int(opcion)
+            if 1 <= opcion_num <= len(self.cursos_disponibles):
+                curso = self.cursos_disponibles[opcion_num - 1]
+                if curso not in estudiante.cursos:
+                    estudiante.cursos.append(curso)
+                    print(estudiante.get_nombre() + " inscrito en " + curso)
+                else:
+                    print("El estudiante ya está inscrito en este curso.")
+            else:
+                print("Opción inválida.")
+        except:
+            print("Opción inválida.")
+
+    def crear_evaluacion(self):
+        """
+        Crea una evaluación de 10 preguntas para un curso seleccionado.
+        Cada pregunta incluye 4 opciones (a, b, c, d).
+        Guarda el conjunto en `evaluaciones[curso]`.
+        """
+        print("\n--- CREAR EVALUACIÓN ---")
+        if not self.cursos_disponibles:
+            print("No hay cursos disponibles. Primero agregue cursos.")
+            return
+
+        for i, curso in enumerate(self.cursos_disponibles, start=1):
+            print(f"{i}. {curso}")
+
+        opcion = input(f"Seleccione un curso (1-{len(self.cursos_disponibles)}): ").strip()
+        try:
+            opcion_num = int(opcion)
+            if 1 <= opcion_num <= len(self.cursos_disponibles):
+                curso = self.cursos_disponibles[opcion_num - 1]
+                preguntas = []
+                for i in range(1, 11):
+                    print("\nPregunta " + str(i) + ":")
+                    enunciado = input("Escriba la pregunta: ")
+                    opciones = {}
+                    opciones["a"] = input("Opción a: ")
+                    opciones["b"] = input("Opción b: ")
+                    opciones["c"] = input("Opción c: ")
+                    opciones["d"] = input("Opción d: ")
+                    preguntas.append({"pregunta": enunciado, "opciones": opciones})
+                self.evaluaciones[curso] = preguntas
+                print("Evaluación creada para " + curso)
+            else:
+                print("Opción inválida.")
+        except:
+            print("Opción inválida.")
+
+    def registrar_calificacion(self):
+        """
+        Registra una calificación numérica (0-100 recomendado) de un estudiante en un curso inscrito.
+        Permite múltiples calificaciones por curso (se acumulan en una lista).
+        """
+        carne = input("Ingrese el carné del estudiante: ").strip()
+        estudiante = None
+        for u in self.usuarios:
+            if u.get_carne() == carne and u.get_tipo() == "estudiante":
+                estudiante = u
+                break
+        if estudiante == None:
+            print("No se encontró el estudiante.")
+            return
+
+        if len(estudiante.cursos) == 0:
+            print("El estudiante no tiene cursos inscritos.")
+            return
+
+        print("\nCursos inscritos:")
+        for i, curso in enumerate(estudiante.cursos, start=1):
+            print(str(i) + ". " + curso)
+
+        opcion = input("Seleccione un curso: ").strip()
+        try:
+            opcion_num = int(opcion)
+            if 1 <= opcion_num <= len(estudiante.cursos):
+                curso = estudiante.cursos[opcion_num - 1]
+                nota = input("Ingrese la calificación (0-100): ").strip()
+                try:
+                    nota_val = float(nota)
+                    if curso not in estudiante.calificaciones:
+                        estudiante.calificaciones[curso] = []
+                    estudiante.calificaciones[curso].append(nota_val)
+                    print("Nota registrada en " + curso + " para " + estudiante.get_nombre())
+                except:
+                    print("Calificación inválida.")
+            else:
+                print("Opción inválida.")
+        except:
+            print("Opción inválida.")
+
+    def ver_cursos_usuario(self):
+        """
+        Muestra los cursos asociados a un usuario:
+            - Si es profesor: cursos asignados (los que aparecen en su lista).
+            - Si es estudiante: cursos inscritos.
+        """
+        carne = input("Ingrese el carné: ").strip()
+        usuario = self._buscar_usuario_por_carne(carne)
+        if not usuario:
+            print("No se encontró el usuario.")
+            return
+
+        cursos = usuario.cursos
+        if cursos:
+            print("\nCursos asignados:" if usuario.get_tipo()=="profesor" else "\nCursos inscritos:")
+            for c in cursos:
+                print("- " + c)
+        else:
+            print("Sin cursos asignados." if usuario.get_tipo()=="profesor" else "Sin cursos inscritos.")
+
+    def reporte_promedios_bajos(self):
+        """
+        Reporta estudiantes cuyo promedio en cualquier curso sea < 60.
+        Calcula el promedio simple por curso a partir de la lista de notas.
+        """
+        print("\n--- REPORTE: ESTUDIANTES CON PROMEDIO BAJO (<60) ---")
+        for u in self.usuarios:
+            if u.get_tipo() == "estudiante":
+                for curso, notas in u.calificaciones.items():
+                    if len(notas) > 0:
+                        promedio = sum(notas) / len(notas)
+                        if promedio < 60:
+                            print(f"{u.get_nombre()} - {curso}: {promedio:.2f}")
+
+    def menu_principal(self):
+        """
+        Muestra el menú principal y despacha a las operaciones del sistema.
+        Se ejecuta en bucle hasta seleccionar la opción 'Salir'.
+        """
+        while True:
+            print("="*50)
+            print("SISTEMA DE REGISTRO DE USUARIOS")
+            print("="*50)
+            print("1. Registrar nuevo usuario")
+            print("2. Ver todos los usuarios")
+            print("3. Agregar curso")
+            print("4. Listar cursos")
+            print("5. Inscribir estudiante en curso")
+            print("6. Crear evaluación")
+            print("7. Registrar calificación")
+            print("8. Ver cursos por usuario")
+            print("9. Ver promedios bajos")
+            print("10. Salir")
+            print("="*50)
+            opcion = input("Seleccione una opción (1-10): ").strip()
+            if opcion == "1":
+                self.registrar_nuevo_usuario()
+            elif opcion == "2":
+                self.mostrar_todos_usuarios()
+            elif opcion == "3":
+                self.agregar_curso()
+            elif opcion == "4":
+                self.listar_cursos()
+            elif opcion == "5":
+                self.inscribir_curso()
+            elif opcion == "6":
+                self.crear_evaluacion()
+            elif opcion == "7":
+                self.registrar_calificacion()
+            elif opcion == "8":
+                self.ver_cursos_usuario()
+            elif opcion == "9":
+                self.reporte_promedios_bajos()
+            elif opcion == "10":
+                print("Finalizado")
+                break
+            else:
+                print("Opción no válida. Intente de nuevo.")
+
+
+if __name__ == "__main__":
+    sistema = SistemaRegistro()
+    sistema.menu_principal()
