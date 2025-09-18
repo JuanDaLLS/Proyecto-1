@@ -1,3 +1,5 @@
+###### DEBE INSTALAR COLORAMA DESDE CONSOLA pip install colorama################
+
 from colorama import init, Fore, Style
 init(autoreset=True)
 
