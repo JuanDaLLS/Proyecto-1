@@ -397,6 +397,21 @@ class SistemaRegistro:
                         if promedio < 60:
                             print(f"{u.get_nombre()} - {curso}: {promedio:.2f}")
 
+    def reporte_de_notas(self):
+        """
+        Reporta estudiantes cuyo promedio en cualquier curso sea < 60.
+        Calcula el promedio simple por curso a partir de la lista de notas.
+        """
+        print("\n--- REPORTE: Notas ESTUDIANTES  (<60) ---")
+        for u in self.usuarios:
+            if u.get_tipo() == "estudiante":
+                for curso, notas in u.calificaciones.items():
+                    if len(notas) > 0:
+                        promedio = sum(notas) / len(notas)
+                        if promedio < 0:
+                            print(f"{u.get_nombre()} - {curso}: {promedio:.2f}")
+
+
     def menu_principal(self):
         while True:
             print(Fore.CYAN + "="*60)
@@ -411,7 +426,8 @@ class SistemaRegistro:
             print("7. Registrar calificación")
             print("8. Ver cursos por usuario")
             print("9. Ver promedios bajos")
-            print("10. Salir")
+            print("10. Reporte de notas")
+            print("11. Salir")
             print(Fore.CYAN + "="*60)
             opcion = input(Fore.WHITE + "Seleccione una opción (1-10): ").strip()
 
@@ -438,6 +454,8 @@ class SistemaRegistro:
             elif opcion == "9":
                 self.reporte_promedios_bajos()
             elif opcion == "10":
+                self.reporte_de_notas()
+            elif opcion == "11":
                 print(Fore.RED + "Finalizado")
                 break
             else:
