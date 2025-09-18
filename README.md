@@ -37,7 +37,7 @@ Filtra los cursos según el usuario activo. Simula una vista personalizada del e
 
 ## Autor
 
-- Luis Gerardo yo
+- Luis Gerardo
 - Fernando Mendez
 - Juan Ulin
 Universidad Rafael Landívar  
