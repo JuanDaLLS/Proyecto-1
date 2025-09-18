@@ -1,3 +1,6 @@
+from colorama import init, Fore, Style
+init(autoreset=True)
+
 class Registro:
     """
     Representa a un usuario del sistema (profesor o estudiante).
@@ -393,15 +396,11 @@ class SistemaRegistro:
                             print(f"{u.get_nombre()} - {curso}: {promedio:.2f}")
 
     def menu_principal(self):
-        """
-        Muestra el menú principal y despacha a las operaciones del sistema.
-        Se ejecuta en bucle hasta seleccionar la opción 'Salir'.
-        """
         while True:
-            print("="*50)
-            print("SISTEMA DE REGISTRO DE USUARIOS")
-            print("="*50)
-            print("1. Registrar nuevo usuario")
+            print(Fore.CYAN + "="*60)
+            print(Fore.YELLOW + "        SISTEMA DE REGISTRO DE USUARIOS")
+            print(Fore.CYAN + "="*60)
+            print(Fore.GREEN + "1. Registrar nuevo usuario")
             print("2. Ver todos los usuarios")
             print("3. Agregar curso")
             print("4. Listar cursos")
@@ -411,8 +410,13 @@ class SistemaRegistro:
             print("8. Ver cursos por usuario")
             print("9. Ver promedios bajos")
             print("10. Salir")
-            print("="*50)
-            opcion = input("Seleccione una opción (1-10): ").strip()
+            print(Fore.CYAN + "="*60)
+            opcion = input(Fore.WHITE + "Seleccione una opción (1-10): ").strip()
+
+            print(Fore.MAGENTA + "\n" + "-"*50)
+            print(Fore.BLUE + f"Ejecutando opción {opcion}...")
+            print(Fore.MAGENTA + "-"*50)
+
             if opcion == "1":
                 self.registrar_nuevo_usuario()
             elif opcion == "2":
@@ -432,11 +436,10 @@ class SistemaRegistro:
             elif opcion == "9":
                 self.reporte_promedios_bajos()
             elif opcion == "10":
-                print("Finalizado")
+                print(Fore.RED + "Finalizado")
                 break
             else:
-                print("Opción no válida. Intente de nuevo.")
-
+                print(Fore.RED + "Opción no válida. Intente de nuevo.")
 
 if __name__ == "__main__":
     sistema = SistemaRegistro()
